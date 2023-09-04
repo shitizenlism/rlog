@@ -25,13 +25,13 @@ const (
 )
 
 const (
-	FACILITY_SYS   = 0 << 3
-	FACILITY_ADMIN = 1 << 3
-	FACILITY_SEC   = 13 << 3
-	FACILITY_APP   = 16 << 3
-	FACILITY_DB    = 17 << 3
-	FACILITY_GAME  = 18 << 3
-	FACILITY_USER  = 19 << 3
+	APP_SYS   = 0 << 3
+	APP_ADMIN = 1 << 3
+	APP_SEC   = 13 << 3
+	APP_APP   = 16 << 3
+	APP_DB    = 17 << 3
+	APP_GAME  = 18 << 3
+	APP_USER  = 19 << 3
 )
 
 type Outputer int
@@ -72,11 +72,10 @@ var gLogger *logger
 var DBLogger  = &gLogger
 var once sync.Once
 
-func InitLog(level int, saveFlag int) {
+func LoggerInit(level int, saveFlag int) {
 	gLogger = newLogger("./logs", "", "Log4Golang", level, saveFlag)
 	gLogger.setCallDepth(3)
 	gLogger.start()
-
 }
 
 func EnableRemoteLog(ident string, addr string) {
@@ -286,32 +285,36 @@ func (l *logger) setDebugOutput(o Outputer) {
 	l.debugOutputer = o
 }
 
-func LogTrace(facilitity int, format string, v ...interface{}) error {
-	return gLogger.addlog(TRACE, facilitity, format, v...)
+func LogTrace(appUser int, format string, v ...interface{}) error {
+	return gLogger.addlog(TRACE, appUser, format, v...)
 }
 
-func LogDebug(facilitity int, format string, v ...interface{}) error {
-	return gLogger.addlog(DEBUG, facilitity, format, v...)
+func LogDebug(appUser int, format string, v ...interface{}) error {
+	return gLogger.addlog(DEBUG, appUser, format, v...)
 }
 
-func LogInfo(facilitity int, format string, v ...interface{}) error {
-	return gLogger.addlog(INFO, facilitity, format, v...)
+func LogInfo(appUser int, format string, v ...interface{}) error {
+	return gLogger.addlog(INFO, appUser, format, v...)
 }
 
-func LogWarn(facilitity int, format string, v ...interface{}) error {
-	return gLogger.addlog(WARN, facilitity, format, v...)
+func Log(format string, v ...interface{}) error {
+	return gLogger.addlog(INFO, APP_USER, format, v...)
 }
 
-func LogNotice(facilitity int, format string, v ...interface{}) error {
-	return gLogger.addlog(NOTICE, facilitity, format, v...)
+func LogWarn(appUser int, format string, v ...interface{}) error {
+	return gLogger.addlog(WARN, appUser, format, v...)
 }
 
-func LogError(facilitity int, format string, v ...interface{}) error {
-	return gLogger.addlog(ERROR, facilitity, format, v...)
+func LogNotice(appUser int, format string, v ...interface{}) error {
+	return gLogger.addlog(NOTICE, appUser, format, v...)
 }
 
-func LogCrit(facilitity int, format string, v ...interface{}) error {
-	return gLogger.addlog(CRIT, facilitity, format, v...)
+func LogError(appUser int, format string, v ...interface{}) error {
+	return gLogger.addlog(ERROR, appUser, format, v...)
+}
+
+func LogCrit(appUser int, format string, v ...interface{}) error {
+	return gLogger.addlog(CRIT, appUser, format, v...)
 }
 
 func (this *logger) getLogLvlStr(logType int) string {
@@ -341,22 +344,22 @@ func (this *logger) getLogLvlStr(logType int) string {
 	return str
 }
 
-func (this *logger) getFacilityStr(facility int) string {
+func (this *logger) getAPPStr(APP int) string {
 	str := ""
-	switch facility {
-	case FACILITY_SYS:
+	switch APP {
+	case APP_SYS:
 		str = "[  SYS]"
-	case FACILITY_ADMIN:
+	case APP_ADMIN:
 		str = "[ADMIN]"
-	case FACILITY_SEC:
+	case APP_SEC:
 		str = "[  SEC]"
-	case FACILITY_APP:
+	case APP_APP:
 		str = "[  APP]"
-	case FACILITY_DB:
+	case APP_DB:
 		str = "[   DB]"
-	case FACILITY_GAME:
+	case APP_GAME:
 		str = "[ GAME]"
-	case FACILITY_USER:
+	case APP_USER:
 		str = "[ USER]"
 	default:
 		break
@@ -375,9 +378,9 @@ func (this *logger) GetGoID() int32 {
 	return int32(id)
 }
 
-func (this *logger) addlog(logLev int, facility int, format string, v ...interface{}) error {
+func (this *logger) addlog(logLev int, APP int, format string, v ...interface{}) error {
 	strLevel := this.getLogLvlStr(logLev)
-	strFacility := this.getFacilityStr(facility)
+	strAPP := this.getAPPStr(APP)
 	strGoID := fmt.Sprintf("[%05d]", this.GetGoID())
 
 	strTime := this.getTime() + " "
@@ -391,7 +394,7 @@ func (this *logger) addlog(logLev int, facility int, format string, v ...interfa
 	}
 
 	strContent := fmt.Sprintf("%s%s%s", strGoID, strFile, msg)
-	strLog := fmt.Sprintf("%s%s%s%s", strTime, strLevel, strFacility, strContent)
+	strLog := fmt.Sprintf("%s%s%s%s", strTime, strLevel, strAPP, strContent)
 
 	if this.saveFlags&CONSOLE != 0 {
 		fmt.Println(strLog)
@@ -404,7 +407,7 @@ func (this *logger) addlog(logLev int, facility int, format string, v ...interfa
 	if this.saveFlags&REMOTE != 0 {
 		if this.remoteLog != nil {
 			this.remoteLog.put(uint64(time.Now().UnixNano()/10e5),
-				uint8(facility), uint8(logLev), strContent)
+				uint8(APP), uint8(logLev), strContent)
 		}
 	}
 

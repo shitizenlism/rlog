@@ -149,7 +149,7 @@ func (r *rclient) sendData(buf []byte) error {
 		n, err := r.conn.Write(buf)
 		if err != nil{
 			r.close()
-			LogNotice(FACILITY_APP, "logserver %v disconnected, err=%v", r.addr, err)
+			LogNotice(APP_USER, "logserver %v disconnected, err=%v", r.addr, err)
 			return err
 		}
 		totalLen -= n
@@ -188,17 +188,17 @@ func (r *rclient) close() {
 }
 
 func (r *rclient) connect(addr string) error {
-	LogInfo(FACILITY_APP, "connecting logserver %v", addr)
+	LogInfo(APP_USER, "connecting logserver %v", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		LogNotice(FACILITY_APP, "connect logserver %v failed, err=%v", addr, err)
+		LogNotice(APP_USER, "connect logserver %v failed, err=%v", addr, err)
 		return nil
 	}
 	r.mutex.Lock()
 	r.conn = conn
 	r.isConnected = true
 	r.mutex.Unlock()
-	LogInfo(FACILITY_APP, "logserver %v connected success", addr)
+	LogInfo(APP_USER, "logserver %v connected success", addr)
 
 	fn := func(){
 		buf := make([]byte, 1024)
@@ -206,7 +206,7 @@ func (r *rclient) connect(addr string) error {
 			_, err := r.conn.Read(buf)
 			if err != nil{
 				r.close()
-				LogNotice(FACILITY_APP, "logserver %v disconnected, err=%v", addr, err)
+				LogNotice(APP_USER, "logserver %v disconnected, err=%v", addr, err)
 				return
 			}
 		}

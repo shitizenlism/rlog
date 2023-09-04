@@ -62,8 +62,8 @@ type logger struct {
 	lastDate      string  
 	IsShowConsole bool     
 	logChan       chan string
-	saveFlags     int // Decide if save or send to remote
-	remoteLog     *remote
+	saveFlags     int // Decide if save or send to remote logger centor
+	remoteLog     *rclient
 	msgQueue      []string
 	msgQueueMutex sync.Mutex
 }
